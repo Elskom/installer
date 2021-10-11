@@ -58,8 +58,8 @@ public class WorkloadManifest
     <ElskomSdkFrameworkVersion Condition=""'$(ElskomSdkFrameworkVersion)' == ''"">{this.Packs.ElskomSdkApp.Version}</ElskomSdkFrameworkVersion>
   </PropertyGroup>
 
-  <Import Project=""Sdk.props"" Sdk=""{Constants.SdkPackName}"" Condition=""$(UseElskomSdk)"" />
-  <Import Project=""Sdk.targets"" Sdk=""{Constants.SdkPackName}"" Condition=""$(UseElskomSdk)"" />
+  <Import Project=""Sdk.props"" Sdk=""{Constants.SdkPackName}"" Condition=""'$(UseElskomSdk)' == 'true'"" />
+  <Import Project=""Sdk.targets"" Sdk=""{Constants.SdkPackName}"" Condition=""'$(UseElskomSdk)' == 'true'"" />
 
 </Project>
 ");

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
@@ -69,7 +70,7 @@ internal static class NuGetHelper
                 }
 
                 await using var fs = File.OpenWrite(
-                    $"{outputPath}{Path.DirectorySeparatorChar}{packageName}.{version}.nupkg").ConfigureAwait(false);
+                    $"{outputPath}{Path.DirectorySeparatorChar}{packageName}.{version}.nupkg");
                 await resource.CopyNupkgToStreamAsync(
                     packageName,
                     NuGetVersion.Parse(version),
@@ -78,24 +79,24 @@ internal static class NuGetHelper
                     NullLogger.Instance,
                     CancellationToken.None).ConfigureAwait(false);
             }
-            else
-            {
-                var resource = repo.GetResource<LocalV3FindPackageByIdResource>();
-                if (resource is null)
-                {
-                    continue;
-                }
+            // else
+            // {
+            //     var resource = repo.GetResource<LocalV3FindPackageByIdResource>();
+            //     if (resource is null)
+            //     {
+            //         continue;
+            //     }
 
-                await using var fs = File.OpenWrite(
-                    $"{outputPath}{Path.DirectorySeparatorChar}{packageName}.{version}.nupkg").ConfigureAwait(false);
-                await resource.CopyNupkgToStreamAsync(
-                    packageName,
-                    NuGetVersion.Parse(version),
-                    fs,
-                    new SourceCacheContext(),
-                    NullLogger.Instance,
-                    CancellationToken.None).ConfigureAwait(false);
-            }
+            //     await using var fs = File.OpenWrite(
+            //         $"{outputPath}{Path.DirectorySeparatorChar}{packageName}.{version}.nupkg");
+            //     await resource.CopyNupkgToStreamAsync(
+            //         packageName,
+            //         NuGetVersion.Parse(version),
+            //         fs,
+            //         new SourceCacheContext(),
+            //         NullLogger.Instance,
+            //         CancellationToken.None).ConfigureAwait(false);
+            // }
         }
     }
 
@@ -103,13 +104,13 @@ internal static class NuGetHelper
     {
         var files = Directory.EnumerateFiles(
             inputPath,
-            $"{packageName}-*").ToList();
+            $"{packageName}.*").ToList();
         string version = string.Empty;
         string file = string.Empty;
         if (files.Any())
         {
             file = files.First();
-            version = file[(file.IndexOf("-", StringComparison.Ordinal) + 1)..file.IndexOf(".nupkg", StringComparison.Ordinal)];
+            version = file.Replace($"{packageName}.", string.Empty).Replace(".nupkg", string.Empty);
         }
 
         return (version, file);
@@ -135,10 +136,10 @@ internal static class NuGetHelper
         var sourceRepositoryProvider = new SourceRepositoryProvider(packageSourceProvider, providers);
         foreach (var repo in sourceRepositoryProvider.GetRepositories())
         {
-            Console.WriteLine(repo.PackageSource.Name);
             if (repo.PackageSource.IsHttp)
             {
-                var resource = repo.GetResource<RemoteV3FindPackageByIdResource>();
+                // Console.WriteLine(repo.PackageSource.Name);
+                var resource = repo.GetResource<RemoteV2FindPackageByIdResource>();
                 if (resource is null)
                 {
                     continue;
@@ -150,46 +151,68 @@ internal static class NuGetHelper
                     NullLogger.Instance,
                     CancellationToken.None).ConfigureAwait(false);
                 var packages = packagesEnumerable.ToList();
-                if (packages.Any())
+                // var packages = await GetAllVersions(repo, packageName).ConfigureAwait(false);
+                if (packages.Count == 1)
                 {
-                    for (var i = 0; i < packages.Count; i++)
-                    {
-                        if (i is not 0
-                            && packages[i] > packages[i - 1])
-                        {
-                            packages.Remove(packages[i - 1]);
-                        }
-                    }
-
+                    Console.WriteLine($"'{packageName}' Version is '{packages[0].ToFullString()}'");
                     return packages[0].ToFullString();
+                }
+
+                for (var i = 0; i < packages.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        if (packages[i] > packages[i - 1])
+                        {
+                            continue;
+                        }
+
+                        Console.WriteLine($"'{packageName}' Version is '{packages[i].ToFullString()}'");
+                        return packages[i].ToFullString();
+                    }
                 }
             }
             else
             {
-                var resource = repo.GetResource<LocalV3FindPackageByIdResource>();
-                if (resource is null)
+                // Console.WriteLine($"Source Name: '{repo.PackageSource.Name}'");
+                // Console.WriteLine($"Source Location: '{repo.PackageSource.Source}'");
+                // Console.WriteLine($"Package Name: '{packageName}'");
+                // var project = new FolderNuGetProject(repo.PackageSource.Source);
+                // project.GetInstalledPath()
+                // var resource = repo.GetResource<LocalV2FindPackageByIdResource>();
+                // if (resource is null)
+                // {
+                //     continue;
+                // }
+
+                // var packagesEnumerable = await resource.GetAllVersionsAsync(
+                //     packageName,
+                //     new SourceCacheContext(),
+                //     NullLogger.Instance,
+                //     CancellationToken.None).ConfigureAwait(false);
+                // var packages = packagesEnumerable.ToList();
+                // var packages = await GetAllVersions(repo, packageName).ConfigureAwait(false);
+                var packages = GetLocalPackageVersions(
+                    repo.PackageSource.Source,
+                    packageName);
+                if (packages.Count == 1)
                 {
-                    continue;
+                    Console.WriteLine($"'{packageName}' Version is '{packages[0].ToFullString()}'");
+                    return packages[0].ToFullString();
                 }
 
-                var packagesEnumerable = await resource.GetAllVersionsAsync(
-                    packageName,
-                    new SourceCacheContext(),
-                    NullLogger.Instance,
-                    CancellationToken.None).ConfigureAwait(false);
-                var packages = packagesEnumerable.ToList();
-                if (packages.Any())
+                for (var i = 0; i < packages.Count; i++)
                 {
-                    for (var i = 0; i < packages.Count; i++)
+                    if (i > 0)
                     {
-                        if (i is not 0
-                            && packages[i] > packages[i - 1])
+                        if (packages[i] > packages[i - 1])
                         {
-                            packages.Remove(packages[i - 1]);
+                            continue;
                         }
-                    }
 
-                    return packages[0].ToFullString();
+                        Console.WriteLine($"'{packageName}' Version is '{packages[i].ToFullString()}'");
+                        return packages[i].ToFullString();
+                    }
                 }
             }
         }
@@ -210,5 +233,29 @@ internal static class NuGetHelper
                 "NuGet"),
             _ => throw new InvalidOperationException("Update OS specific nuget.config finder!"),
         };
+    }
+
+    private static List<NuGetVersion> GetLocalPackageVersions(string inputPath, string packageName)
+    {
+        var results = new List<NuGetVersion>();
+        foreach (var file in Directory.EnumerateFiles(
+            inputPath,
+            $"{packageName}.*.nupkg"))
+        {
+            var regex = new Regex(@"[a-zA-Z._]*(\d.\d.\d)", RegexOptions.IgnoreCase);
+            var match = regex.Match(
+                file.Replace(
+                $"{inputPath}{Path.DirectorySeparatorChar}",
+                string.Empty));
+            var version = match.Groups[1].Value;
+            if (!file.Equals($"{inputPath}{Path.DirectorySeparatorChar}{packageName}.{version}.nupkg"))
+            {
+                continue;
+            }
+
+            results.Add(NuGetVersion.Parse(version));
+        }
+
+        return results;
     }
 }
