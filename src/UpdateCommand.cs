@@ -64,7 +64,8 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             sdkVersion).ConfigureAwait(false);
         Console.WriteLine($"Workload Manifest is now version: '{workloadManifest.Version}'.");
         Console.WriteLine($"Workload Sdk is now version: '{workloadManifest.Packs.ElskomSdk.Version}'.");
-        Console.WriteLine($"Workload Runtime and Reference Packs is now version: runtime:'{workloadManifest.Packs.ElskomSdkApp}', ref:'{workloadManifest.Packs.ElskomSdkAppRef}'.");
+        Console.WriteLine($"Workload Runtime Pack is now version: '{workloadManifest.Packs.ElskomSdkApp}'.");
+        Console.WriteLine($"Workload Reference Pack is now version: '{workloadManifest.Packs.ElskomSdkAppRef}'.");
         workloadManifest.WriteJsonFile(sdkVersion);
         return 0;
     }

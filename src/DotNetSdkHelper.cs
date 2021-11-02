@@ -166,11 +166,11 @@ internal static class DotNetSdkHelper
 
     private static string ConvertVersionToSdkBand(string version)
     {
-        var version2 = ConverVersionToNuGetVersion(version);
+        var version2 = ConvertVersionToNuGetVersion(version);
         return $"{version2.Major.ToString()}.{version2.Minor.ToString()}.{(version2.Patch / 100 * 100).ToString()}";
     }
 
-    private static NuGetVersion ConverVersionToNuGetVersion(string version)
+    private static NuGetVersion ConvertVersionToNuGetVersion(string version)
     {
         _ = NuGetVersion.TryParse(version, out var version2);
         return version2;
@@ -180,11 +180,32 @@ internal static class DotNetSdkHelper
     {
         for (var i = 0; i < sdks.Count; i++)
         {
-            if (i > 0
-                && ConverVersionToNuGetVersion(sdks[i - 1].Version)
-                > ConverVersionToNuGetVersion(sdks[i].Version))
+            if (i > 0)
             {
-                sdks.Remove(sdks[i - 1]);
+                if (sdks[i - 1].Version.Contains('-')
+                    && !sdks[i].Version.Contains('-')
+                    && ConvertVersionToNuGetVersion(sdks[i - 1].Version)
+                    < ConvertVersionToNuGetVersion(sdks[i].Version))
+                {
+                    sdks.Remove(sdks[i - 1]);
+                }
+                else if (sdks[i - 1].Version.Contains('-')
+                         && sdks[i].Version.Contains('-')
+                         && ConvertVersionToNuGetVersion(sdks[i - 1].Version)
+                         < ConvertVersionToNuGetVersion(sdks[i].Version))
+                {
+                    sdks.Remove(sdks[i - 1]);
+                }
+                else if (ConvertVersionToNuGetVersion(sdks[i - 1].Version)
+                         < ConvertVersionToNuGetVersion(sdks[i].Version))
+                {
+                    sdks.Remove(sdks[i - 1]);
+                }
+                else if (ConvertVersionToNuGetVersion(sdks[i - 1].Version)
+                         > ConvertVersionToNuGetVersion(sdks[i].Version))
+                {
+                    sdks.Remove(sdks[i]);
+                }
             }
         }
     }

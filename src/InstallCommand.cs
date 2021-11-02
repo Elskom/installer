@@ -28,6 +28,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             { Constants.RuntimePackName, runtimePackVersion },
             { Constants.TemplatePackName, templatePackVersion },
         });
+        Console.WriteLine("Installing Packages...");
         await InstallPackageAsync(
             Constants.SdkPackName,
             sdkPackVersion,
@@ -43,6 +44,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             runtimePackVersion,
             installedRuntimePackVersion,
             settings.SdkVersion!).ConfigureAwait(false);
+        Console.WriteLine("Installing Templates...");
         await DownloadPackageAsync(
             Constants.TemplatePackName,
             installedTemplatePackVersion,
