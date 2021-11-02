@@ -22,10 +22,10 @@ internal static class DotNetSdkHelper
         return Path.Join(sdkLocation, "sdk-manifests", sdkVersionBand, workloadName);
     }
 
-    internal static string GetDotNetSdkWorkloadPacksFolder(string packName, string version)
+    internal static string GetDotNetSdkWorkloadPacksFolder()
     {
         var sdkLocation = GetDotNetSdkLocation();
-        return Path.Join(sdkLocation, "packs", packName, version);
+        return Path.Join(sdkLocation, "packs");
     }
 
     internal static string GetDotNetSdkWorkloadMetadataInstalledWorkloads(string packName, string sdkVersion)

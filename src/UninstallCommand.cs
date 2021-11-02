@@ -41,10 +41,8 @@ public class UninstallCommand : Command<WorkloadSettings>
     {
         if (!string.IsNullOrEmpty(packVersion))
         {
-            var packFolder = DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder(
-                packName,
-                packVersion);
-            Directory.Delete(packFolder, true);
+            var packFolder = DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder();
+            Directory.Delete(Path.Join(packFolder, packName), true);
         }
     }
     
