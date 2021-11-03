@@ -108,15 +108,24 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             packVersions.GetValueOrDefault(packName)))
         {
             Console.WriteLine($"Update found for workload package '{packName}'.");
-            NuGetHelper.DeletePackage(
+            var templateUninstallCommand = new ProcessStartOptions()
+            {
+                WaitForProcessExit = true,
+            }.WithStartInformation(
+                $"{DotNetSdkHelper.GetDotNetSdkLocation()}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
+                $"new -u {Constants.TemplatePackName}",
+                false,
+                false,
+                false,
+                true,
+                ProcessWindowStyle.Hidden,
+                Environment.CurrentDirectory);
+            _ = templateUninstallCommand.Start();
+            var packVersion = await InstallCommand.DownloadPackageAsync(
                 packName,
-                DotNetSdkHelper.GetDotNetSdkWorkloadTemplatePacksFolder());
-            workloadPack.UpdateVersion(
-                packVersions.GetValueOrDefault(packName)!);
-            await InstallCommand.DownloadPackageAsync(
-                Constants.TemplatePackName,
                 string.Empty,
                 sdkVersion).ConfigureAwait(false);
+            workloadPack.UpdateVersion(packVersion);
             Console.WriteLine($"Successfully updated workload package '{packName}'.");
             return true;
         }

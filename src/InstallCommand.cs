@@ -11,8 +11,6 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.RefPackName).ConfigureAwait(false);
         var runtimePackVersion = await NuGetHelper.ResolveWildcardPackageVersionAsync(
             Constants.RuntimePackName).ConfigureAwait(false);
-        var templatePackVersion = await NuGetHelper.ResolveWildcardPackageVersionAsync(
-            Constants.TemplatePackName).ConfigureAwait(false);
         var installedSdkPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
             Constants.SdkPackName);
         var installedRefPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
@@ -21,13 +19,6 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.RuntimePackName);
         var installedTemplatePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadTemplatePackVersion(
             Constants.TemplatePackName);
-        InstallManifest(settings.SdkVersion!, new Dictionary<string, string>
-        {
-            { Constants.SdkPackName, sdkPackVersion },
-            { Constants.RefPackName, refPackVersion },
-            { Constants.RuntimePackName, runtimePackVersion },
-            { Constants.TemplatePackName, templatePackVersion },
-        });
         Console.WriteLine("Installing Packages...");
         await InstallPackageAsync(
             Constants.SdkPackName,
@@ -45,10 +36,17 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             installedRuntimePackVersion,
             settings.SdkVersion!).ConfigureAwait(false);
         Console.WriteLine("Installing Templates...");
-        await DownloadPackageAsync(
+        var templatePackVersion = await DownloadPackageAsync(
             Constants.TemplatePackName,
             installedTemplatePackVersion,
             settings.SdkVersion!).ConfigureAwait(false);
+        InstallManifest(sdkPackVersion, new Dictionary<string, string>
+        {
+            { Constants.SdkPackName, sdkPackVersion },
+            { Constants.RefPackName, refPackVersion },
+            { Constants.RuntimePackName, runtimePackVersion },
+            { Constants.TemplatePackName, templatePackVersion },
+        });
         return 0;
     }
 
@@ -79,9 +77,8 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             {
                 await NuGetHelper.InstallPackageAsync(
                     packName,
-                    DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder(
-                        packName,
-                        packVersion)).ConfigureAwait(false);
+                    packVersion,
+                    DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
                 await using var fs = File.Create(
                     DotNetSdkHelper.GetDotNetSdkWorkloadMetadataInstalledPacks(
                         packName,
@@ -100,26 +97,43 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
         }
     }
 
-    internal static async Task DownloadPackageAsync(string packName, string installedPackVersion, string sdkVersion)
+    internal static async Task<string> DownloadPackageAsync(string packName, string installedPackVersion, string sdkVersion)
     {
+        var version = installedPackVersion;
         if (string.IsNullOrEmpty(installedPackVersion))
         {
-            var outputPath = DotNetSdkHelper.GetDotNetSdkWorkloadTemplatePacksFolder();
-            await NuGetHelper.DownloadPackageAsync(
-                packName,
-                outputPath).ConfigureAwait(false);
-            await using var fs = File.Create(
-                DotNetSdkHelper.GetDotNetSdkWorkloadMetadataInstalledPacks(
-                    packName,
-                    NuGetHelper.GetDownloadedPackageVersion(
-                        packName,
-                        outputPath).version,
-                    sdkVersion)).ConfigureAwait(false);
+            var templateInstallCommand = new ProcessStartOptions()
+            {
+                WaitForProcessExit = true,
+            }.WithStartInformation(
+                $"{DotNetSdkHelper.GetDotNetSdkLocation()}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
+                $"new -i {packName}",
+                true,
+                false,
+                false,
+                true,
+                ProcessWindowStyle.Hidden,
+                Environment.CurrentDirectory);
+            var result = templateInstallCommand.Start();
+            var results = result.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var resultItem in results)
+            {
+                var index = resultItem.IndexOf("::");
+                if (index > -1)
+                {
+                    var resultItems = resultItem.Split(' ');
+                    resultItems = resultItems[1].Split("::");
+                    version = resultItems[1];
+                }
+            }
+            await Task.Delay(0).ConfigureAwait(false);
             Console.WriteLine($"Successfully installed workload package '{packName}'.");
         }
         else
         {
             Console.WriteLine($"Workload package '{packName}' is already installed. Did you intend to run 'update'?");
         }
+
+        return version;
     }
 }

@@ -105,112 +105,7 @@ internal static class DotNetSdkHelper
         return string.Empty;
     }
 
-    private static string GetDotNetSdkFeatureBandVersion()
-    {
-        var sdkLocation = GetDotNetSdkLocation();
-        var startOptions = new ProcessStartOptions
-        {
-            WaitForProcessExit = true,
-        }.WithStartInformation(
-            $"{sdkLocation}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
-            "--list-sdks",
-            true,
-            true,
-            false,
-            true,
-            ProcessWindowStyle.Hidden,
-            Environment.CurrentDirectory);
-        var result = startOptions.Start().Split(
-            Environment.NewLine,
-            StringSplitOptions.RemoveEmptyEntries);
-        var sdks = new List<DotNetSdkInfo>();
-        foreach (var line in result)
-        {
-            try
-            {
-                if (line.Contains('[') && line.Contains(']'))
-                {
-                    var versionStr = line[..line.IndexOf('[')].Trim();
-                    var locStr = line[line.IndexOf('[')..].Trim('[', ']');
-                    var loc = Path.Combine(locStr, versionStr);
-                    if (Directory.Exists(locStr) && Directory.Exists(loc))
-                    {
-                        // If only 1 file it's probably the
-                        // EnableWorkloadResolver.sentinel file that was 
-                        // never uninstalled with the rest of the sdk
-                        if (Directory.GetFiles(loc).Length > 1)
-                        {
-                            sdks.Add(new DotNetSdkInfo(versionStr, new DirectoryInfo(loc)));
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Bad line, ignore
-            }
-        }
-
-        FilterSdks(ref sdks);
-        if (sdks.Count > 1)
-        {
-            Console.WriteLine("Bug found. There should have just been 1 sdk left over from the filter.");
-        }
-
-        var sdk = sdks[0]; // there should only be 1 listed now.
-        Console.WriteLine($"Detected .NET SDK Version: {sdk.Version}");
-        var sdkVersion = ConvertVersionToSdkBand(sdk.Version);
-        Console.WriteLine($"Detected .NET SDK Band as: {sdkVersion}");
-        return sdkVersion;
-    }
-
-    private static string ConvertVersionToSdkBand(string version)
-    {
-        var version2 = ConvertVersionToNuGetVersion(version);
-        return $"{version2.Major.ToString()}.{version2.Minor.ToString()}.{(version2.Patch / 100 * 100).ToString()}";
-    }
-
-    private static NuGetVersion ConvertVersionToNuGetVersion(string version)
-    {
-        _ = NuGetVersion.TryParse(version, out var version2);
-        return version2;
-    }
-
-    private static void FilterSdks(ref List<DotNetSdkInfo> sdks)
-    {
-        for (var i = 0; i < sdks.Count; i++)
-        {
-            if (i > 0)
-            {
-                if (sdks[i - 1].Version.Contains('-')
-                    && !sdks[i].Version.Contains('-')
-                    && ConvertVersionToNuGetVersion(sdks[i - 1].Version)
-                    < ConvertVersionToNuGetVersion(sdks[i].Version))
-                {
-                    sdks.Remove(sdks[i - 1]);
-                }
-                else if (sdks[i - 1].Version.Contains('-')
-                         && sdks[i].Version.Contains('-')
-                         && ConvertVersionToNuGetVersion(sdks[i - 1].Version)
-                         < ConvertVersionToNuGetVersion(sdks[i].Version))
-                {
-                    sdks.Remove(sdks[i - 1]);
-                }
-                else if (ConvertVersionToNuGetVersion(sdks[i - 1].Version)
-                         < ConvertVersionToNuGetVersion(sdks[i].Version))
-                {
-                    sdks.Remove(sdks[i - 1]);
-                }
-                else if (ConvertVersionToNuGetVersion(sdks[i - 1].Version)
-                         > ConvertVersionToNuGetVersion(sdks[i].Version))
-                {
-                    sdks.Remove(sdks[i]);
-                }
-            }
-        }
-    }
-
-    private static string GetDotNetSdkLocation()
+    internal static string GetDotNetSdkLocation()
     {
         var knownDotNetLocations = (OperatingSystem.IsWindows(), OperatingSystem.IsLinux(), OperatingSystem.IsMacOS()) switch
         {
@@ -284,5 +179,83 @@ internal static class DotNetSdkHelper
         }
 
         return sdkRoot;
+    }
+
+    private static string GetDotNetSdkFeatureBandVersion()
+    {
+        var sdkLocation = GetDotNetSdkLocation();
+        var startOptions = new ProcessStartOptions
+        {
+            WaitForProcessExit = true,
+        }.WithStartInformation(
+            $"{sdkLocation}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
+            "--list-sdks",
+            true,
+            true,
+            false,
+            true,
+            ProcessWindowStyle.Hidden,
+            Environment.CurrentDirectory);
+        var result = startOptions.Start().Split(
+            Environment.NewLine,
+            StringSplitOptions.RemoveEmptyEntries);
+        var sdks = new List<DotNetSdkInfo>();
+        foreach (var line in result)
+        {
+            try
+            {
+                if (line.Contains('[') && line.Contains(']'))
+                {
+                    var versionStr = line[..line.IndexOf('[')].Trim();
+                    var locStr = line[line.IndexOf('[')..].Trim('[', ']');
+                    var loc = Path.Combine(locStr, versionStr);
+                    if (Directory.Exists(locStr) && Directory.Exists(loc))
+                    {
+                        // If only 1 file it's probably the
+                        // EnableWorkloadResolver.sentinel file that was 
+                        // never uninstalled with the rest of the sdk
+                        if (Directory.GetFiles(loc).Length > 1)
+                        {
+                            sdks.Add(new DotNetSdkInfo(versionStr, new DirectoryInfo(loc)));
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Bad line, ignore
+            }
+        }
+
+        FilterSdks(ref sdks);
+        if (sdks.Count > 1)
+        {
+            Console.WriteLine("Bug found. There should have just been 1 sdk left over from the filter.");
+        }
+
+        var sdk = sdks[0]; // there should only be 1 listed now.
+        Console.WriteLine($"Detected .NET SDK Version: {sdk.Version}");
+        var sdkVersion = ConvertVersionToSdkBand(sdk.Version);
+        Console.WriteLine($"Detected .NET SDK Band as: {sdkVersion}");
+        return sdkVersion;
+    }
+
+    private static string ConvertVersionToSdkBand(string version)
+    {
+        var version2 = ConvertVersionToNuGetVersion(version);
+        return $"{version2.Major}.{version2.Minor}.{version2.Patch / 100 * 100}";
+    }
+
+    private static NuGetVersion ConvertVersionToNuGetVersion(string version)
+    {
+        _ = NuGetVersion.TryParse(version, out var version2);
+        return version2;
+    }
+
+    private static void FilterSdks(ref List<DotNetSdkInfo> sdks)
+    {
+        var sdk = sdks.MaxBy(sdks => ConvertVersionToNuGetVersion(sdks.Version));
+        sdks.Clear();
+        sdks.Add(sdk!);
     }
 }

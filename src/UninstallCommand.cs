@@ -31,9 +31,19 @@ public class UninstallCommand : Command<WorkloadSettings>
         UninstallPackage(Constants.SdkPackName, sdkPackVersion);
         UninstallPackage(Constants.RefPackName, refPackVersion);
         UninstallPackage(Constants.RuntimePackName, runtimePackVersion);
-        _ = NuGetHelper.DeletePackage(
-            Constants.TemplatePackName,
-            DotNetSdkHelper.GetDotNetSdkWorkloadTemplatePacksFolder());
+        var templateUninstallCommand = new ProcessStartOptions()
+        {
+            WaitForProcessExit = true,
+        }.WithStartInformation(
+            $"{DotNetSdkHelper.GetDotNetSdkLocation()}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
+            $"new -u {Constants.TemplatePackName}",
+            false,
+            false,
+            false,
+            true,
+            ProcessWindowStyle.Hidden,
+            Environment.CurrentDirectory);
+        _ = templateUninstallCommand.Start();
         return 0;
     }
 
