@@ -1,0 +1,22 @@
+name: .NET Core (build pull request)
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_NOLOGO: true
+      BUILD_RERUN_COUNT: ${{ github.run_attempt }}
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Install latest .NET SDK
+      uses: Elskom/setup-latest-dotnet@main
+
+    - name: Restore, Build, and pack
+      uses: Elskom/build-dotnet@main
+      with:
+        TEST: false

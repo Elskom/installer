@@ -1,7 +1,11 @@
-﻿// Need to register the code pages provider for code that parses
+﻿// set the console title.
+Console.Title = "Elskom workload cross-platform installer";
+
+// Need to register the code pages provider for code that parses
 // and later needs ISO-8859-2
 Encoding.RegisterProvider(
     CodePagesEncodingProvider.Instance);
+
 // Test that it loads
 _ = Encoding.GetEncoding("ISO-8859-2");
 var app = new CommandApp();
@@ -24,4 +28,9 @@ if (args.Any())
     finalArgs.AddRange(args);
 }
 
-app.RunAsync(finalArgs);
+using (NuGetHelper.HttpClient = new HttpClient())
+{
+    var result = await app.RunAsync(finalArgs).ConfigureAwait(false);
+    Console.Title = "";
+    return result;
+}

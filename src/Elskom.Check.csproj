@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>elskom-check</ToolCommandName>
-    <PackageOutputPath>./artifacts</PackageOutputPath>
+    <PackageOutputPath>../artifacts</PackageOutputPath>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <LangVersion>latest</LangVersion>
     <PackageId>Elskom.Net.Check</PackageId>
@@ -28,6 +28,8 @@
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <DebugType>embedded</DebugType>
     <RootNamespace>Elskom.Check</RootNamespace>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
 
 </Project>

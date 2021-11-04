@@ -19,7 +19,6 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.RuntimePackName);
         var installedTemplatePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadTemplatePackVersion(
             Constants.TemplatePackName);
-        Console.WriteLine("Installing Packages...");
         await InstallPackageAsync(
             Constants.SdkPackName,
             sdkPackVersion,
@@ -35,11 +34,9 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             runtimePackVersion,
             installedRuntimePackVersion,
             settings.SdkVersion!).ConfigureAwait(false);
-        Console.WriteLine("Installing Templates...");
         var templatePackVersion = await DownloadPackageAsync(
             Constants.TemplatePackName,
-            installedTemplatePackVersion,
-            settings.SdkVersion!).ConfigureAwait(false);
+            installedTemplatePackVersion).ConfigureAwait(false);
         InstallManifest(sdkPackVersion, new Dictionary<string, string>
         {
             { Constants.SdkPackName, sdkPackVersion },
@@ -97,12 +94,12 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
         }
     }
 
-    internal static async Task<string> DownloadPackageAsync(string packName, string installedPackVersion, string sdkVersion)
+    internal static async Task<string> DownloadPackageAsync(string packName, string installedPackVersion)
     {
         var version = installedPackVersion;
         if (string.IsNullOrEmpty(installedPackVersion))
         {
-            var templateInstallCommand = new ProcessStartOptions()
+            var templateInstallCommand = new ProcessStartOptions
             {
                 WaitForProcessExit = true,
             }.WithStartInformation(
@@ -118,7 +115,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             var results = result.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             foreach (var resultItem in results)
             {
-                var index = resultItem.IndexOf("::");
+                var index = resultItem.IndexOf("::", StringComparison.Ordinal);
                 if (index > -1)
                 {
                     var resultItems = resultItem.Split(' ');

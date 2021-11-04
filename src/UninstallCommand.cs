@@ -10,14 +10,6 @@ public class UninstallCommand : Command<WorkloadSettings>
 
     private static int Uninstall(string sdkVersion)
     {
-        // var sdkPackVersion = NuGetHelper.ResolveWildcardPackageVersion(
-        //     Constants.SdkPackName);
-        // var refPackVersion = NuGetHelper.ResolveWildcardPackageVersion(
-        //     Constants.RefPackName);
-        // var runtimePackVersion = NuGetHelper.ResolveWildcardPackageVersion(
-        //     Constants.RuntimePackName);
-        // var templatePackVersion = NuGetHelper.ResolveWildcardPackageVersion(
-        //     Constants.TemplatePackName);
         var sdkPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
             Constants.SdkPackName);
         var refPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
@@ -31,7 +23,7 @@ public class UninstallCommand : Command<WorkloadSettings>
         UninstallPackage(Constants.SdkPackName, sdkPackVersion);
         UninstallPackage(Constants.RefPackName, refPackVersion);
         UninstallPackage(Constants.RuntimePackName, runtimePackVersion);
-        var templateUninstallCommand = new ProcessStartOptions()
+        var templateUninstallCommand = new ProcessStartOptions
         {
             WaitForProcessExit = true,
         }.WithStartInformation(

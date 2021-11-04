@@ -1,47 +1,22 @@
-using NuGet.Common;
-using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
-
 namespace Elskom.Check;
 
 internal static class NuGetHelper
 {
+    internal static HttpClient? HttpClient { get; set; }
+
     internal static async Task InstallPackageAsync(string packageName, string version, string outputPath)
     {
-
-        /*
-        var providers = new List<Lazy<INuGetResourceProvider>>();
-        providers.AddRange(Repository.Provider.GetCoreV3());
-        var packageSource = new PackageSource("https://api.nuget.org/v3/index.json");
-        var repo = new SourceRepository(packageSource, providers);
-        var settings = Settings.LoadDefaultSettings(
-            GetNugetConfigLocation(),
-            "NuGet.Config",
-            new XPlatMachineWideSetting());
-        var packageSourceProvider = new PackageSourceProvider(settings);
-        var sourceRepositoryProvider = new SourceRepositoryProvider(packageSourceProvider, providers);
-        var folderNugetProject = new FolderNuGetProject(outputPath);
-        var resolutionContext = new ResolutionContext(
-            DependencyBehavior.Lowest,
-            true,
-            false,
-            VersionConstraints.ExactRelease);
-        var packageManager = new NuGetPackageManager(
-            sourceRepositoryProvider,
-            settings, outputPath)
+        var packageResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{packageName}/{version}/{packageName}.{version}.nupkg");
+        if (!packageResponse.IsSuccessStatusCode)
         {
-            PackagesFolderNuGetProject = folderNugetProject,
-        };
-        var identity = new PackageIdentity(packageName, NuGetVersion.Parse(version));
-        await packageManager.InstallPackageAsync(
-            folderNugetProject,
-            identity,
-            resolutionContext,
-            new EmptyNuGetProjectContext(),
-            repo,
-            sourceRepositoryProvider.GetRepositories(),
-            CancellationToken.None).ConfigureAwait(false);
-        */
+            return;
+        }
+
+        var extractionPath = $"{outputPath}/{packageName}/{version}";
+        var filePath = Path.Combine(extractionPath, $"{packageName}.nupkg");
+        Directory.CreateDirectory(extractionPath);
+        await File.WriteAllBytesAsync(filePath, await packageResponse.Content.ReadAsByteArrayAsync());
+        ZipFile.ExtractToDirectory(filePath, extractionPath, true);
     }
 
     internal static (string version, string fileName) GetDownloadedPackageVersion(string packageName, string inputPath)
@@ -62,18 +37,22 @@ internal static class NuGetHelper
 
     internal static async Task<string> ResolveWildcardPackageVersionAsync(string packageName)
     {
-        // Connect to the official package repository
-        SourceRepository repository = Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json");
-        PackageMetadataResource resource = await repository.GetResourceAsync<PackageMetadataResource>(CancellationToken.None).ConfigureAwait(false);
-        IEnumerable<IPackageSearchMetadata> packages = await resource.GetMetadataAsync(
-            packageName,
-            includePrerelease: true,
-            includeUnlisted: false,
-            new SourceCacheContext(),
-            NullLogger.Instance,
-            CancellationToken.None);
-        var version = packages.MaxBy(packages => packages.Identity.Version)?.Identity.Version;
-        Console.WriteLine($"'{packageName}' Version is '{version?.ToFullString()}'");
-        return version is not null ? version.ToFullString() : string.Empty;
+        var versionResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{packageName}/index.json").ConfigureAwait(false);
+        if (!versionResponse.IsSuccessStatusCode)
+        {
+            return string.Empty;
+        }
+
+        var content = await versionResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var versionsInfo = JsonSerializer.Deserialize<VersionInfo>(content);
+        var version = versionsInfo?.Versions?.LastOrDefault();
+        Console.WriteLine($"'{packageName}' Version is '{(version is null ? "null" : version)}'");
+        return version is not null ? version : string.Empty;
+    }
+
+    private record VersionInfo
+    {
+        [JsonPropertyName("versions")]
+        public string[]? Versions { get; init; }
     }
 }

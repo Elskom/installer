@@ -2,10 +2,6 @@ namespace Elskom.Check;
 
 internal sealed class ProcessStartOptions
 {
-    private bool Executing { get; set; }
-
-    private bool Running { get; set; }
-
     internal ProcessStartInfo? StartInfo { get; private set; }
 
     public bool WaitForProcessExit { get; set; }
@@ -38,7 +34,6 @@ internal sealed class ProcessStartOptions
             throw new FileNotFoundException("File to execute does not exist.");
         }
 
-        this.Executing = true;
         StringBuilder? stdout = null;
         StringBuilder? stderr = null;
         using var proc = Process.Start(this.StartInfo);
@@ -68,8 +63,6 @@ internal sealed class ProcessStartOptions
                 stderr.AppendLine(e.Data);
             }
         };
-        this.Running = true;
-        this.Executing = false;
         if (this.StartInfo.RedirectStandardOutput)
         {
             proc.BeginOutputReadLine();
@@ -85,7 +78,6 @@ internal sealed class ProcessStartOptions
             proc.WaitForExit();
         }
 
-        this.Running = false;
         return (stdout is not null, stderr is not null) switch
         {
             (true, false) => $"{stdout}",

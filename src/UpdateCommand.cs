@@ -60,8 +60,7 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
         _ = await UpdateWorkloadTemplatePackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkTemplates,
-            Constants.TemplatePackName,
-            sdkVersion).ConfigureAwait(false);
+            Constants.TemplatePackName).ConfigureAwait(false);
         Console.WriteLine($"Workload Manifest is now version: '{workloadManifest.Version}'.");
         Console.WriteLine($"Workload Sdk is now version: '{workloadManifest.Packs.ElskomSdk.Version}'.");
         Console.WriteLine($"Workload Runtime Pack is now version: '{workloadManifest.Packs.ElskomSdkApp}'.");
@@ -101,14 +100,13 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
     private static async Task<bool> UpdateWorkloadTemplatePackAsync(
         IReadOnlyDictionary<string, string> packVersions,
         WorkloadManifest.WorkloadPacks.WorkloadPack workloadPack,
-        string packName,
-        string sdkVersion)
+        string packName)
     {
         if (!workloadPack.Version.Equals(
             packVersions.GetValueOrDefault(packName)))
         {
             Console.WriteLine($"Update found for workload package '{packName}'.");
-            var templateUninstallCommand = new ProcessStartOptions()
+            var templateUninstallCommand = new ProcessStartOptions
             {
                 WaitForProcessExit = true,
             }.WithStartInformation(
@@ -123,8 +121,7 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             _ = templateUninstallCommand.Start();
             var packVersion = await InstallCommand.DownloadPackageAsync(
                 packName,
-                string.Empty,
-                sdkVersion).ConfigureAwait(false);
+                string.Empty).ConfigureAwait(false);
             workloadPack.UpdateVersion(packVersion);
             Console.WriteLine($"Successfully updated workload package '{packName}'.");
             return true;
