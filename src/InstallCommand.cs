@@ -79,11 +79,15 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
                     packName,
                     packVersion,
                     outputPath).ConfigureAwait(false);
-                await using var fs = File.Create(
-                    DotNetSdkHelper.GetDotNetSdkWorkloadMetadataInstalledPacks(
-                        packName,
-                        packVersion,
-                        sdkVersion)).ConfigureAwait(false);
+                if (!packName.Equals(Constants.RuntimePackName))
+                {
+                    await using var fs = File.Create(
+                        DotNetSdkHelper.GetDotNetSdkWorkloadMetadataInstalledPacks(
+                            packName,
+                            packVersion,
+                            sdkVersion)).ConfigureAwait(false);
+                }
+
                 Console.WriteLine($"Successfully installed workload package '{packName}'.");
             }
             else
