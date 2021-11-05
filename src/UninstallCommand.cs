@@ -16,6 +16,7 @@ public class UninstallCommand : Command<WorkloadSettings>
             Constants.RefPackName);
         var runtimePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
             Constants.RuntimePackName);
+
         // delete the directories to the workload.
         UninstallManifest(sdkVersion);
 

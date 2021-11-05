@@ -12,7 +12,7 @@
     <LangVersion>latest</LangVersion>
     <PackageId>Elskom.Net.Check</PackageId>
     <Title>.NET Elskom Workload Check Tool</Title>
-    <Version>$(PackageVersion)</Version>
+    <Version>1.0.1</Version>
     <Authors>Els_kom org.</Authors>
     <Owners>Els_kom org.</Owners>
     <summary>A dotnet tool for installing/uninstalling and updating the Elskom workload.</summary>
@@ -23,7 +23,7 @@
     <PackageProjectUrl>https://github.com/Elskom/installer</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/Elskom/installer</RepositoryUrl>
-    <AssemblyFileVersion>$(PackageVersion)</AssemblyFileVersion>
+    <AssemblyFileVersion>$(Version)</AssemblyFileVersion>
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <DebugType>embedded</DebugType>

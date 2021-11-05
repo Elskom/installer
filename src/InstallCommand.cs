@@ -37,7 +37,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
         var templatePackVersion = await DownloadPackageAsync(
             Constants.TemplatePackName,
             installedTemplatePackVersion).ConfigureAwait(false);
-        InstallManifest(sdkPackVersion, new Dictionary<string, string>
+        InstallManifest(settings.SdkVersion!, new Dictionary<string, string>
         {
             { Constants.SdkPackName, sdkPackVersion },
             { Constants.RefPackName, refPackVersion },
