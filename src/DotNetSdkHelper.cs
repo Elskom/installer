@@ -28,6 +28,12 @@ internal static class DotNetSdkHelper
         return Path.Join(sdkLocation, "packs");
     }
 
+    internal static string GetDotNetSdkWorkloadRuntimePacksFolder()
+    {
+        var sdkLocation = GetDotNetSdkLocation();
+        return Path.Join(sdkLocation, "shared");
+    }
+
     internal static string GetDotNetSdkWorkloadMetadataInstalledWorkloads(string packName, string sdkVersion)
     {
         var sdkLocation = GetDotNetSdkLocation();
@@ -77,12 +83,6 @@ internal static class DotNetSdkHelper
     {
         var sdkLocation = GetDotNetSdkLocation();
         return Path.Join(sdkLocation, "template-packs");
-    }
-
-    internal static string GetInstalledDotNetSdkWorkloadTemplatePackFile(string packName, string version)
-    {
-        var templatePacksFolder = GetDotNetSdkWorkloadTemplatePacksFolder();
-        return Path.Join(templatePacksFolder, $"{packName}-{version}.nupkg");
     }
 
     internal static string GetInstalledDotNetSdkWorkloadTemplatePackVersion(string packName)
@@ -254,7 +254,7 @@ internal static class DotNetSdkHelper
 
     private static void FilterSdks(ref List<DotNetSdkInfo> sdks)
     {
-        var sdk = sdks.MaxBy(sdks => ConvertVersionToNuGetVersion(sdks.Version));
+        var sdk = sdks.MaxBy(netSdkInfo => ConvertVersionToNuGetVersion(netSdkInfo.Version));
         sdks.Clear();
         sdks.Add(sdk!);
     }

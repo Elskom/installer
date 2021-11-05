@@ -23,17 +23,20 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.SdkPackName,
             sdkPackVersion,
             installedSdkPackVersion,
-            settings.SdkVersion!).ConfigureAwait(false);
+            settings.SdkVersion!,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
         await InstallPackageAsync(
             Constants.RefPackName,
             refPackVersion,
             installedRefPackVersion,
-            settings.SdkVersion!).ConfigureAwait(false);
+            settings.SdkVersion!,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
         await InstallPackageAsync(
             Constants.RuntimePackName,
             runtimePackVersion,
             installedRuntimePackVersion,
-            settings.SdkVersion!).ConfigureAwait(false);
+            settings.SdkVersion!,
+            DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
         var templatePackVersion = await DownloadPackageAsync(
             Constants.TemplatePackName,
             installedTemplatePackVersion).ConfigureAwait(false);
@@ -66,7 +69,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
                 sdkVersion));
     }
 
-    internal static async Task InstallPackageAsync(string packName, string packVersion, string installedPackVersion, string sdkVersion)
+    internal static async Task InstallPackageAsync(string packName, string packVersion, string installedPackVersion, string sdkVersion, string outputPath)
     {
         if (string.IsNullOrEmpty(installedPackVersion))
         {
@@ -75,7 +78,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
                 await NuGetHelper.InstallPackageAsync(
                     packName,
                     packVersion,
-                    DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
+                    outputPath).ConfigureAwait(false);
                 await using var fs = File.Create(
                     DotNetSdkHelper.GetDotNetSdkWorkloadMetadataInstalledPacks(
                         packName,

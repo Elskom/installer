@@ -21,9 +21,18 @@ public class UninstallCommand : Command<WorkloadSettings>
         UninstallManifest(sdkVersion);
 
         // delete the directories to the workload.
-        UninstallPackage(Constants.SdkPackName, sdkPackVersion);
-        UninstallPackage(Constants.RefPackName, refPackVersion);
-        UninstallPackage(Constants.RuntimePackName, runtimePackVersion);
+        UninstallPackage(
+            Constants.SdkPackName,
+            sdkPackVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder());
+        UninstallPackage(
+            Constants.RefPackName,
+            refPackVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder());
+        UninstallPackage(
+            Constants.RuntimePackName,
+            runtimePackVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder());
         var templateUninstallCommand = new ProcessStartOptions
         {
             WaitForProcessExit = true,
@@ -40,15 +49,14 @@ public class UninstallCommand : Command<WorkloadSettings>
         return 0;
     }
 
-    internal static void UninstallPackage(string packName, string packVersion)
+    internal static void UninstallPackage(string packName, string packVersion, string packFolder)
     {
         if (!string.IsNullOrEmpty(packVersion))
         {
-            var packFolder = DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder();
             Directory.Delete(Path.Join(packFolder, packName), true);
         }
     }
-    
+
     private static void UninstallManifest(string sdkVersion)
     {
         var workloadFolder = DotNetSdkHelper.GetDotNetSdkWorkloadFolder(

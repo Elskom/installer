@@ -41,7 +41,9 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
         if (await UpdateWorkloadPackAsync(
             packVersions,
             workloadManifest!.Packs.ElskomSdk,
-            Constants.SdkPackName, sdkVersion).ConfigureAwait(false))
+            Constants.SdkPackName,
+            sdkVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false))
         {
             workloadManifest.Version =
                 packVersions.GetValueOrDefault(Constants.SdkPackName)!;
@@ -51,12 +53,14 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             packVersions,
             workloadManifest.Packs.ElskomSdkAppRef,
             Constants.RefPackName,
-            sdkVersion).ConfigureAwait(false);
+            sdkVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
         _ = await UpdateWorkloadPackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkApp,
             Constants.RuntimePackName,
-            sdkVersion).ConfigureAwait(false);
+            sdkVersion,
+            DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
         _ = await UpdateWorkloadTemplatePackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkTemplates,
@@ -73,7 +77,8 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
         IReadOnlyDictionary<string, string> packVersions,
         WorkloadManifest.WorkloadPacks.WorkloadPack workloadPack,
         string packName,
-        string sdkVersion)
+        string sdkVersion,
+        string outputPath)
     {
         if (!workloadPack.Version.Equals(
             packVersions.GetValueOrDefault(packName)!))
@@ -81,14 +86,16 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             Console.WriteLine($"Update found for workload package '{packName}'.");
             UninstallCommand.UninstallPackage(
                 packName,
-                workloadPack.Version);
+                workloadPack.Version,
+                outputPath);
             workloadPack.UpdateVersion(
                 packVersions.GetValueOrDefault(packName)!);
             await InstallCommand.InstallPackageAsync(
                 packName,
                 workloadPack.Version,
                 string.Empty,
-                sdkVersion).ConfigureAwait(false);
+                sdkVersion,
+                outputPath).ConfigureAwait(false);
             Console.WriteLine($"Successfully updated workload package '{packName}'.");
             return true;
         }

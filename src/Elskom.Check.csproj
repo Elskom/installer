@@ -12,13 +12,16 @@
     <LangVersion>latest</LangVersion>
     <PackageId>Elskom.Net.Check</PackageId>
     <Title>.NET Elskom Workload Check Tool</Title>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Authors>Els_kom org.</Authors>
     <Owners>Els_kom org.</Owners>
     <summary>A dotnet tool for installing/uninstalling and updating the Elskom workload.</summary>
     <PackageDescription>
       A dotnet tool for installing/uninstalling and updating the Elskom workload.
     </PackageDescription>
+    <PackageReleaseNotes>
+      Fixed a bug where the runtime pack will be installed to the wrong location.
+    </PackageReleaseNotes>
     <Copyright>Copyright © 2021</Copyright>
     <PackageProjectUrl>https://github.com/Elskom/installer</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
