@@ -79,19 +79,6 @@ internal static class DotNetSdkHelper
         return Path.Join(dir, sdkVersionBand);
     }
 
-    internal static string GetDotNetSdkWorkloadTemplatePacksFolder()
-    {
-        var sdkLocation = GetDotNetSdkLocation();
-        return Path.Join(sdkLocation, "template-packs");
-    }
-
-    internal static string GetInstalledDotNetSdkWorkloadTemplatePackVersion(string packName)
-    {
-        var templatePacksFolder = GetDotNetSdkWorkloadTemplatePacksFolder();
-        var result = NuGetHelper.GetDownloadedPackageVersion(packName, templatePacksFolder);
-        return result.version;
-    }
-
     internal static string GetInstalledDotNetSdkWorkloadPackVersion(string packName)
     {
         var sdkLocation = GetDotNetSdkLocation();
@@ -107,7 +94,6 @@ internal static class DotNetSdkHelper
 
     internal static string GetInstalledDotNetSdkWorkloadRuntimePackVersion(string packName)
     {
-        // var sdkLocation = GetDotNetSdkLocation();
         var workloadRuntimePackFolder = GetDotNetSdkWorkloadRuntimePacksFolder();
         var packPath = Path.Join(workloadRuntimePackFolder, packName);
         if (Directory.Exists(packPath))

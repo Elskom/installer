@@ -52,10 +52,15 @@ public class WorkloadManifest
             sdkVersion);
         File.WriteAllText(
             $"{workloadFolder}{Path.DirectorySeparatorChar}WorkloadManifest.targets",
-            @$"<Project>
+            @"<Project>
 
-  <!-- Ensure the Sdk's props and targets file gets properly imported. -->
-  <Sdk Name=""{Constants.SdkPackName}"" Version=""{this.Packs.ElskomSdk.Version}"" Condition=""'$(UseElskomSdk)' == 'true'"" />
+  <!--
+      If we import the workload Sdk here for some reason
+      it would get imported for all projects and not just specific ones.
+
+      That behavior is never intended so all applications needing to use it
+      will have to set their Project Sdk node to Elskom.Sdk.
+  -->
 
 </Project>
 ");

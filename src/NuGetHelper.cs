@@ -67,7 +67,6 @@ internal static class NuGetHelper
         var content = await versionResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
         var versionsInfo = JsonSerializer.Deserialize<VersionInfo>(content);
         var version = versionsInfo?.Versions?.LastOrDefault();
-        // Console.WriteLine($"'{packageName}' Version is '{version ?? "null"}'");
         return version ?? string.Empty;
     }
 
