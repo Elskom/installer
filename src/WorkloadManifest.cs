@@ -52,7 +52,12 @@ public class WorkloadManifest
             sdkVersion);
         File.WriteAllText(
             $"{workloadFolder}{Path.DirectorySeparatorChar}WorkloadManifest.targets",
-            @"<Project>
+            @$"<Project>
+
+  <PropertyGroup>
+    <!--Set the Framework version for the Sdk to use. -->
+    <ElskomSdkFrameworkVersion>{this.Packs.ElskomSdkApp.Version}</ElskomSdkFrameworkVersion>
+  </PropertyGroup>
 
   <!--
       If we import the workload Sdk here for some reason
