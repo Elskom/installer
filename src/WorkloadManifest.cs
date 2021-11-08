@@ -54,10 +54,6 @@ public class WorkloadManifest
             $"{workloadFolder}{Path.DirectorySeparatorChar}WorkloadManifest.targets",
             @$"<Project>
 
-  <PropertyGroup>
-    <ElskomSdkFrameworkVersion Condition=""'$(ElskomSdkFrameworkVersion)' == ''"">{this.Packs.ElskomSdkApp.Version}</ElskomSdkFrameworkVersion>
-  </PropertyGroup>
-
   <!-- Ensure the Sdk's props and targets file gets properly imported. -->
   <Sdk Name=""{Constants.SdkPackName}"" Version=""{this.Packs.ElskomSdk.Version}"" Condition=""'$(UseElskomSdk)' == 'true'"" />
 

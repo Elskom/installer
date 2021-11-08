@@ -13,10 +13,31 @@ internal static class NuGetHelper
         }
 
         var extractionPath = $"{outputPath}/{packageName}/{version}";
-        var filePath = Path.Combine(extractionPath, $"{packageName}.nupkg");
         Directory.CreateDirectory(extractionPath);
-        await File.WriteAllBytesAsync(filePath, await packageResponse.Content.ReadAsByteArrayAsync());
-        ZipFile.ExtractToDirectory(filePath, extractionPath, true);
+        var packageContents = await packageResponse.Content.ReadAsByteArrayAsync();
+        if (outputPath.Equals(DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()))
+        {
+            // properly unpackage the runtime pack.
+            using var ms = new MemoryStream(packageContents);
+            using var zipArchive = new ZipArchive(ms, ZipArchiveMode.Read, true);
+            foreach (var entry in zipArchive.Entries)
+            {
+                if (entry.FullName.Contains("runtimes/any/lib/net6.0/"))
+                {
+                    entry.ExtractToFile(Path.Join(extractionPath, entry.Name), true);
+                }
+                else if (entry.Name.Equals("Elskom.Sdk.App.versions.txt"))
+                {
+                    entry.ExtractToFile(Path.Join(extractionPath, ".version"), true);
+                }
+            }
+        }
+        else
+        {
+            var filePath = Path.Combine(extractionPath, $"{packageName}.nupkg");
+            await File.WriteAllBytesAsync(filePath, packageContents);
+            ZipFile.ExtractToDirectory(filePath, extractionPath, true);
+        }
     }
 
     internal static (string version, string fileName) GetDownloadedPackageVersion(string packageName, string inputPath)
@@ -46,7 +67,7 @@ internal static class NuGetHelper
         var content = await versionResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
         var versionsInfo = JsonSerializer.Deserialize<VersionInfo>(content);
         var version = versionsInfo?.Versions?.LastOrDefault();
-        Console.WriteLine($"'{packageName}' Version is '{version ?? "null"}'");
+        // Console.WriteLine($"'{packageName}' Version is '{version ?? "null"}'");
         return version ?? string.Empty;
     }
 

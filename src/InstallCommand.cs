@@ -15,10 +15,8 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.SdkPackName);
         var installedRefPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
             Constants.RefPackName);
-        var installedRuntimePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
+        var installedRuntimePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadRuntimePackVersion(
             Constants.RuntimePackName);
-        var installedTemplatePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadTemplatePackVersion(
-            Constants.TemplatePackName);
         await InstallPackageAsync(
             Constants.SdkPackName,
             sdkPackVersion,
@@ -38,8 +36,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             settings.SdkVersion!,
             DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
         var templatePackVersion = await DownloadPackageAsync(
-            Constants.TemplatePackName,
-            installedTemplatePackVersion).ConfigureAwait(false);
+            Constants.TemplatePackName).ConfigureAwait(false);
         InstallManifest(settings.SdkVersion!, new Dictionary<string, string>
         {
             { Constants.SdkPackName, sdkPackVersion },
@@ -57,6 +54,10 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             if (string.IsNullOrEmpty(packVersion.Value))
             {
                 throw new InvalidOperationException($"Workload package '{packVersion.Key}' not found.");
+            }
+            else if (packVersion.Value.Equals("already installed"))
+            {
+                throw new InvalidOperationException($"The workload was already installed. Check above for the proper command to update.");
             }
         }
 
@@ -101,41 +102,42 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
         }
     }
 
-    internal static async Task<string> DownloadPackageAsync(string packName, string installedPackVersion)
+    internal static async Task<string> DownloadPackageAsync(string packName)
     {
-        var version = installedPackVersion;
-        if (string.IsNullOrEmpty(installedPackVersion))
+        var version = string.Empty;
+        var templateInstallCommand = new ProcessStartOptions
         {
-            var templateInstallCommand = new ProcessStartOptions
+            WaitForProcessExit = true,
+        }.WithStartInformation(
+            $"{DotNetSdkHelper.GetDotNetSdkLocation()}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
+            $"new -i {packName}",
+            true,
+            false,
+            false,
+            true,
+            ProcessWindowStyle.Hidden,
+            Environment.CurrentDirectory);
+        var result = templateInstallCommand.Start();
+        var results = result.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var resultItem in results)
+        {
+            if (resultItem.IndexOf("::", StringComparison.Ordinal) > -1)
             {
-                WaitForProcessExit = true,
-            }.WithStartInformation(
-                $"{DotNetSdkHelper.GetDotNetSdkLocation()}{Path.DirectorySeparatorChar}dotnet{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}",
-                $"new -i {packName}",
-                true,
-                false,
-                false,
-                true,
-                ProcessWindowStyle.Hidden,
-                Environment.CurrentDirectory);
-            var result = templateInstallCommand.Start();
-            var results = result.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var resultItem in results)
-            {
-                var index = resultItem.IndexOf("::", StringComparison.Ordinal);
-                if (index > -1)
+                if (resultItem.Contains(" installed the following templates:"))
                 {
                     var resultItems = resultItem.Split(' ');
                     resultItems = resultItems[1].Split("::");
                     version = resultItems[1];
+                    await Task.Delay(0).ConfigureAwait(false);
+                    Console.WriteLine($"Successfully installed workload package '{packName}'.");
                 }
             }
-            await Task.Delay(0).ConfigureAwait(false);
-            Console.WriteLine($"Successfully installed workload package '{packName}'.");
-        }
-        else
-        {
-            Console.WriteLine($"Workload package '{packName}' is already installed. Did you intend to run 'update'?");
+            else if (resultItem.Contains(" is already installed, version:"))
+            {
+                Console.WriteLine($"Workload package '{packName}' is already installed. Did you intend to run 'update'?");
+                version = "already installed";
+                break;
+            }
         }
 
         return version;

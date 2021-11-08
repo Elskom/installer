@@ -38,38 +38,60 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
                 workloadFolder,
                 "WorkloadManifest.json")).ConfigureAwait(false);
         var workloadManifest = JsonSerializer.Deserialize<WorkloadManifest>(text);
-        if (await UpdateWorkloadPackAsync(
+        var sdkPackUpdated = await UpdateWorkloadPackAsync(
             packVersions,
             workloadManifest!.Packs.ElskomSdk,
             Constants.SdkPackName,
             sdkVersion,
-            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false))
+            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
+        if (sdkPackUpdated)
         {
             workloadManifest.Version =
                 packVersions.GetValueOrDefault(Constants.SdkPackName)!;
         }
 
-        _ = await UpdateWorkloadPackAsync(
+        var refPackUpdated = await UpdateWorkloadPackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkAppRef,
             Constants.RefPackName,
             sdkVersion,
             DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
-        _ = await UpdateWorkloadPackAsync(
+        var runtimePackUpdated = await UpdateWorkloadPackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkApp,
             Constants.RuntimePackName,
             sdkVersion,
             DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
-        _ = await UpdateWorkloadTemplatePackAsync(
+        var templatePackUpdated = await UpdateWorkloadTemplatePackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkTemplates,
             Constants.TemplatePackName).ConfigureAwait(false);
-        Console.WriteLine($"Workload Manifest is now version: '{workloadManifest.Version}'.");
-        Console.WriteLine($"Workload Sdk is now version: '{workloadManifest.Packs.ElskomSdk.Version}'.");
-        Console.WriteLine($"Workload Runtime Pack is now version: '{workloadManifest.Packs.ElskomSdkApp}'.");
-        Console.WriteLine($"Workload Reference Pack is now version: '{workloadManifest.Packs.ElskomSdkAppRef}'.");
-        workloadManifest.WriteJsonFile(sdkVersion);
+        if (sdkPackUpdated)
+        {
+            Console.WriteLine($"Workload Manifest is now version: '{workloadManifest.Version}'.");
+            Console.WriteLine($"Workload Sdk is now version: '{workloadManifest.Packs.ElskomSdk.Version}'.");
+        }
+
+        if (runtimePackUpdated)
+        {
+            Console.WriteLine($"Workload Runtime Pack is now version: '{workloadManifest.Packs.ElskomSdkApp.Version}'.");
+        }
+
+        if (refPackUpdated)
+        {
+            Console.WriteLine($"Workload Reference Pack is now version: '{workloadManifest.Packs.ElskomSdkAppRef.Version}'.");
+        }
+
+        if (templatePackUpdated)
+        {
+            Console.WriteLine($"Workload Template Pack is now version: '{workloadManifest.Packs.ElskomSdkTemplates.Version}'.");
+        }
+
+        if (sdkPackUpdated || runtimePackUpdated || refPackUpdated || templatePackUpdated)
+        {
+            workloadManifest.WriteJsonFile(sdkVersion);
+        }
+
         return 0;
     }
 
@@ -87,7 +109,8 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             UninstallCommand.UninstallPackage(
                 packName,
                 workloadPack.Version,
-                outputPath);
+                outputPath,
+                sdkVersion);
             workloadPack.UpdateVersion(
                 packVersions.GetValueOrDefault(packName)!);
             await InstallCommand.InstallPackageAsync(
@@ -127,8 +150,7 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
                 Environment.CurrentDirectory);
             _ = templateUninstallCommand.Start();
             var packVersion = await InstallCommand.DownloadPackageAsync(
-                packName,
-                string.Empty).ConfigureAwait(false);
+                packName).ConfigureAwait(false);
             workloadPack.UpdateVersion(packVersion);
             Console.WriteLine($"Successfully updated workload package '{packName}'.");
             return true;

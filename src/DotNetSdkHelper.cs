@@ -105,6 +105,20 @@ internal static class DotNetSdkHelper
         return string.Empty;
     }
 
+    internal static string GetInstalledDotNetSdkWorkloadRuntimePackVersion(string packName)
+    {
+        // var sdkLocation = GetDotNetSdkLocation();
+        var workloadRuntimePackFolder = GetDotNetSdkWorkloadRuntimePacksFolder();
+        var packPath = Path.Join(workloadRuntimePackFolder, packName);
+        if (Directory.Exists(packPath))
+        {
+            var di = new DirectoryInfo(packPath);
+            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).First().Name;
+        }
+
+        return string.Empty;
+    }
+
     internal static string GetDotNetSdkLocation()
     {
         var knownDotNetLocations = (OperatingSystem.IsWindows(), OperatingSystem.IsLinux(), OperatingSystem.IsMacOS()) switch
