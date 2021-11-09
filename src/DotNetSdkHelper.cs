@@ -42,12 +42,19 @@ internal static class DotNetSdkHelper
             true => GetDotNetSdkFeatureBandVersion(),
             false => ConvertVersionToSdkBand(sdkVersion),
         };
-        return Path.Join(
+        var installedWorkloadsPath = Path.Join(
             sdkLocation,
             "metadata",
             "workloads",
             sdkVersionBand,
-            "InstalledWorkloads",
+            "InstalledWorkloads");
+        if (!Directory.Exists(installedWorkloadsPath))
+        {
+            _ = Directory.CreateDirectory(installedWorkloadsPath);
+        }
+
+        return Path.Join(
+            installedWorkloadsPath,
             packName);
     }
 
