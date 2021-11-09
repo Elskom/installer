@@ -12,7 +12,7 @@
     <LangVersion>latest</LangVersion>
     <PackageId>Elskom.Net.Check</PackageId>
     <Title>.NET Elskom Workload Check Tool</Title>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <Authors>Els_kom org.</Authors>
     <Owners>Els_kom org.</Owners>
     <summary>A dotnet tool for installing/uninstalling and updating the Elskom workload.</summary>
@@ -20,7 +20,7 @@
       A dotnet tool for installing/uninstalling and updating the Elskom workload.
     </PackageDescription>
     <PackageReleaseNotes>
-       Fixed issue where application can crash on linux with custom DOTNET_ROOT.
+       Fixed issue where the no update message is accidentally fixed to the name of the runtime pack when there are no updates.
     </PackageReleaseNotes>
     <Copyright>Copyright © 2021</Copyright>
     <PackageProjectUrl>https://github.com/Elskom/installer</PackageProjectUrl>

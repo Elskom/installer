@@ -123,7 +123,7 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
             return true;
         }
 
-        Console.WriteLine($"No updates found for workload package '{Constants.RuntimePackName}'.");
+        Console.WriteLine($"No updates found for workload package '{packName}'.");
         return false;
     }
 
