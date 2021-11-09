@@ -24,7 +24,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             settings.SdkVersion!,
             DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false))
         {
-            Console.WriteLine($"Successfully installed workload package '{Constants.RefPackName}'.");
+            Console.WriteLine($"Successfully installed workload package '{Constants.SdkPackName}'.");
         }
 
         if (await InstallPackageAsync(
