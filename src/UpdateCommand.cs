@@ -90,6 +90,7 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
         if (sdkPackUpdated || runtimePackUpdated || refPackUpdated || templatePackUpdated)
         {
             workloadManifest.WriteJsonFile(sdkVersion);
+            workloadManifest.WriteTargetsFile(sdkVersion);
         }
 
         return 0;
