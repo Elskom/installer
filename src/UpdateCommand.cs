@@ -50,18 +50,56 @@ public class UpdateCommand : AsyncCommand<WorkloadSettings>
                 packVersions.GetValueOrDefault(Constants.SdkPackName)!;
         }
 
-        var refPackUpdated = await UpdateWorkloadPackAsync(
-            packVersions,
-            workloadManifest.Packs.ElskomSdkAppRef,
-            Constants.RefPackName,
-            sdkVersion,
-            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
-        var runtimePackUpdated = await UpdateWorkloadPackAsync(
-            packVersions,
-            workloadManifest.Packs.ElskomSdkApp,
-            Constants.RuntimePackName,
-            sdkVersion,
-            DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
+        var refPackUpdated = false;
+        var runtimePackUpdated = false;
+        var installedRefPackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadPackVersion(
+            Constants.RefPackName);
+        var installedRuntimePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadRuntimePackVersion(
+            Constants.RuntimePackName);
+        if (!installedRefPackVersion.Equals(string.Empty))
+        {
+            if (installedRefPackVersion.EndsWith("-dev")
+                || DotNetSdkHelper.ConvertVersionToNuGetVersion(installedRefPackVersion)
+                > DotNetSdkHelper.ConvertVersionToNuGetVersion(workloadManifest.Packs.ElskomSdkAppRef.Version))
+            {
+                Console.WriteLine("Picked up newer installed reference pack, using that instead.");
+                workloadManifest.Packs.ElskomSdkAppRef.UpdateVersion(installedRefPackVersion);
+                refPackUpdated = true;
+            }
+        }
+
+        if (!installedRuntimePackVersion.Equals(string.Empty))
+        {
+            if (installedRuntimePackVersion.EndsWith("-dev")
+                || DotNetSdkHelper.ConvertVersionToNuGetVersion(installedRuntimePackVersion)
+                > DotNetSdkHelper.ConvertVersionToNuGetVersion(workloadManifest.Packs.ElskomSdkApp.Version))
+            {
+                Console.WriteLine("Picked up newer installed runtime pack, using that instead.");
+                workloadManifest.Packs.ElskomSdkApp.UpdateVersion(installedRuntimePackVersion);
+                runtimePackUpdated = true;
+            }
+        }
+
+        if (!refPackUpdated)
+        {
+            refPackUpdated = await UpdateWorkloadPackAsync(
+                packVersions,
+                workloadManifest.Packs.ElskomSdkAppRef,
+                Constants.RefPackName,
+                sdkVersion,
+                DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false);
+        }
+
+        if (!runtimePackUpdated)
+        {
+            runtimePackUpdated = await UpdateWorkloadPackAsync(
+                packVersions,
+                workloadManifest.Packs.ElskomSdkApp,
+                Constants.RuntimePackName,
+                sdkVersion,
+                DotNetSdkHelper.GetDotNetSdkWorkloadRuntimePacksFolder()).ConfigureAwait(false);
+        }
+
         var templatePackUpdated = await UpdateWorkloadTemplatePackAsync(
             packVersions,
             workloadManifest.Packs.ElskomSdkTemplates,

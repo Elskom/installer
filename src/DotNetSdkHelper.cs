@@ -106,7 +106,8 @@ internal static class DotNetSdkHelper
         if (Directory.Exists(packPath))
         {
             var di = new DirectoryInfo(packPath);
-            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).First().Name;
+            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).MaxBy(
+                item => ConvertVersionToNuGetVersion(item.Name))?.Name ?? string.Empty;
         }
 
         return string.Empty;
@@ -188,6 +189,12 @@ internal static class DotNetSdkHelper
         return sdkRoot;
     }
 
+    internal static NuGetVersion ConvertVersionToNuGetVersion(string version)
+    {
+        _ = NuGetVersion.TryParse(version, out var version2);
+        return version2;
+    }
+
     private static string GetDotNetSdkFeatureBandVersion()
     {
         var sdkLocation = GetDotNetSdkLocation();
@@ -251,12 +258,6 @@ internal static class DotNetSdkHelper
     {
         var version2 = ConvertVersionToNuGetVersion(version);
         return $"{version2.Major}.{version2.Minor}.{version2.Patch / 100 * 100}";
-    }
-
-    private static NuGetVersion ConvertVersionToNuGetVersion(string version)
-    {
-        _ = NuGetVersion.TryParse(version, out var version2);
-        return version2;
     }
 
     private static void FilterSdks(ref List<DotNetSdkInfo> sdks)

@@ -17,12 +17,34 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Constants.RefPackName);
         var installedRuntimePackVersion = DotNetSdkHelper.GetInstalledDotNetSdkWorkloadRuntimePackVersion(
             Constants.RuntimePackName);
+        if (!installedRefPackVersion.Equals(string.Empty))
+        {
+            if (installedRefPackVersion.EndsWith("-dev")
+                || DotNetSdkHelper.ConvertVersionToNuGetVersion(installedRefPackVersion)
+                > DotNetSdkHelper.ConvertVersionToNuGetVersion(refPackVersion))
+            {
+                Console.WriteLine("Picked up newer installed reference pack, using that instead.");
+                refPackVersion = installedRefPackVersion;
+            }
+        }
+
+        if (!installedRuntimePackVersion.Equals(string.Empty))
+        {
+            if (installedRuntimePackVersion.EndsWith("-dev")
+                || DotNetSdkHelper.ConvertVersionToNuGetVersion(installedRuntimePackVersion)
+                > DotNetSdkHelper.ConvertVersionToNuGetVersion(runtimePackVersion))
+            {
+                Console.WriteLine("Picked up newer installed runtime pack, using that instead.");
+                runtimePackVersion = installedRuntimePackVersion;
+            }
+        }
+
         if (await InstallPackageAsync(
-            Constants.SdkPackName,
-            sdkPackVersion,
-            installedSdkPackVersion,
-            settings.SdkVersion!,
-            DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false))
+                Constants.SdkPackName,
+                sdkPackVersion,
+                installedSdkPackVersion,
+                settings.SdkVersion!,
+                DotNetSdkHelper.GetDotNetSdkWorkloadPacksFolder()).ConfigureAwait(false))
         {
             Console.WriteLine($"Successfully installed workload package '{Constants.SdkPackName}'.");
         }
