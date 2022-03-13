@@ -69,20 +69,27 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             Console.WriteLine($"Successfully installed workload package '{Constants.RuntimePackName}'.");
         }
 
-        var templatePackVersion = await DownloadPackageAsync(
-            Constants.TemplatePackName).ConfigureAwait(false);
-        if (!templatePackVersion.Equals("already installed"))
+        // avoid installing the templates and the workload manifest if sdkPackVersion, refPackVersion,
+        // and runtimePackVersion is null or empty.
+        if (!string.IsNullOrEmpty(sdkPackVersion)
+            && !string.IsNullOrEmpty(refPackVersion)
+            && !string.IsNullOrEmpty(runtimePackVersion))
         {
-            Console.WriteLine($"Successfully installed workload package '{Constants.TemplatePackName}'.");
-        }
+            var templatePackVersion = await DownloadPackageAsync(
+                Constants.TemplatePackName).ConfigureAwait(false);
+            if (!templatePackVersion.Equals("already installed"))
+            {
+                Console.WriteLine($"Successfully installed workload package '{Constants.TemplatePackName}'.");
+            }
 
-        InstallManifest(settings.SdkVersion!, new Dictionary<string, string>
-        {
-            { Constants.SdkPackName, sdkPackVersion },
-            { Constants.RefPackName, refPackVersion },
-            { Constants.RuntimePackName, runtimePackVersion },
-            { Constants.TemplatePackName, templatePackVersion },
-        });
+            InstallManifest(settings.SdkVersion!, new Dictionary<string, string>
+            {
+                { Constants.SdkPackName, sdkPackVersion },
+                { Constants.RefPackName, refPackVersion },
+                { Constants.RuntimePackName, runtimePackVersion },
+                { Constants.TemplatePackName, templatePackVersion },
+            });
+        }
         return 0;
     }
 
