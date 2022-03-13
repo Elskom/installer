@@ -90,6 +90,11 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
                 { Constants.TemplatePackName, templatePackVersion },
             });
         }
+        else
+        {
+            throw new InvalidOperationException("Could not install the workload due to failure to obtain package versions.");
+        }
+
         return 0;
     }
 
