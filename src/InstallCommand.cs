@@ -144,7 +144,7 @@ public class InstallCommand : AsyncCommand<WorkloadSettings>
             }
             else
             {
-                Console.WriteLine($"No version for workload package '{packName}' is published to any registered nuget feeds.");
+                Console.WriteLine($"No version for workload package '{packName}' is published to nuget.org.");
             }
         }
         else

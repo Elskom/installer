@@ -4,6 +4,7 @@
     <Using Include="System.Diagnostics" />
     <Using Include="System.Diagnostics.CodeAnalysis" />
     <Using Include="System.IO.Compression" />
+    <Using Include="System.Net" />
     <Using Include="System.Runtime.InteropServices" />
     <Using Include="System.Text" />
     <Using Include="System.Text.Json" />

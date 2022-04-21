@@ -6,7 +6,14 @@ internal static class NuGetHelper
 
     internal static async Task InstallPackageAsync(string packageName, string version, string outputPath)
     {
-        var packageResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{packageName}/{version}/{packageName}.{version}.nupkg");
+        var lowerPackageName = packageName.ToLowerInvariant();
+        var lowerVersion = version.ToLowerInvariant();
+        var packageResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{lowerPackageName}/{lowerVersion}/{lowerPackageName}.{lowerVersion}.nupkg");
+        if (packageResponse.StatusCode.Equals(HttpStatusCode.NotFound))
+        {
+            throw new InvalidOperationException("bug in package install.");
+        }
+
         if (!packageResponse.IsSuccessStatusCode)
         {
             return;
@@ -58,7 +65,13 @@ internal static class NuGetHelper
 
     internal static async Task<string> ResolveWildcardPackageVersionAsync(string packageName)
     {
-        var versionResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{packageName}/index.json").ConfigureAwait(false);
+        var lowerPackageName = packageName.ToLowerInvariant();
+        var versionResponse = await HttpClient!.GetAsync($"https://api.nuget.org/v3-flatcontainer/{lowerPackageName}/index.json").ConfigureAwait(false);
+        if (versionResponse.StatusCode.Equals(HttpStatusCode.NotFound))
+        {
+            throw new InvalidOperationException("bug in package version request.");
+        }
+
         if (!versionResponse.IsSuccessStatusCode)
         {
             return string.Empty;
