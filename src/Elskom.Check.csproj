@@ -7,12 +7,13 @@
     <Nullable>enable</Nullable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>elskom-check</ToolCommandName>
+    <RollForward>LatestMajor</RollForward>
     <PackageOutputPath>../artifacts</PackageOutputPath>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <LangVersion>latest</LangVersion>
     <PackageId>Elskom.Net.Check</PackageId>
     <Title>.NET Elskom Workload Check Tool</Title>
-    <Version>1.0.14</Version>
+    <Version>1.0.15</Version>
     <Authors>Els_kom org.</Authors>
     <Owners>Els_kom org.</Owners>
     <summary>A dotnet tool for installing/uninstalling and updating the Elskom workload.</summary>
@@ -20,7 +21,7 @@
       A dotnet tool for installing/uninstalling and updating the Elskom workload.
     </PackageDescription>
     <PackageReleaseNotes>
-       Fixed bug in package install function and version retrieval function.
+       Fixed issue where users cant use the tool when only the .NET 7 runtime is installed.
     </PackageReleaseNotes>
     <Copyright>Copyright © 2021~2022</Copyright>
     <PackageProjectUrl>https://github.com/Elskom/installer</PackageProjectUrl>

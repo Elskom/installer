@@ -13,7 +13,7 @@
     <Using Include="Spectre.Console" />
     <Using Include="Spectre.Console.Cli" />
     <Using Include="Elskom.Check" />
-    <PackageReference Include="Spectre.Console" Version="*-*" />
+    <PackageReference Include="Spectre.Console.Cli" Version="*-*" />
     <PackageReference Include="NuGet.Versioning" Version="*-*" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="*-*" PrivateAssets="All" />
   </ItemGroup>
