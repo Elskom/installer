@@ -16,10 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@main
 
-    - name: Install latest .NET 6 SDK
+    - name: Install latest .NET 8 SDK
       uses: Elskom/setup-latest-dotnet@main
       with:
-        VERSION_MAJOR: '6'
+        VERSION_MAJOR: '8'
         VERSION_BAND: '2xx'
 
     - name: Restore, Build, and pack
