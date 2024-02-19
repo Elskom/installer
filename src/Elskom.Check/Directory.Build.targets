@@ -1,0 +1,19 @@
+<Project>
+
+  <ItemGroup>
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.IO.Compression" />
+    <Using Include="System.Net" />
+    <Using Include="System.Runtime.InteropServices" />
+    <Using Include="System.Text" />
+    <Using Include="System.Text.Json" />
+    <Using Include="System.Text.Json.Serialization" />
+    <Using Include="NuGet.Versioning" />
+    <Using Include="Spectre.Console" />
+    <Using Include="Spectre.Console.Cli" />
+    <Using Include="Elskom.Check" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="*-*" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

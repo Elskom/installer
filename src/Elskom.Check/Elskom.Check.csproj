@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>elskom-check</ToolCommandName>
+    <RollForward>LatestMajor</RollForward>
+    <PackageOutputPath>../../artifacts</PackageOutputPath>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <LangVersion>latest</LangVersion>
+    <PackageId>Elskom.Net.Check</PackageId>
+    <Title>.NET Elskom Workload Check Tool</Title>
+    <Version>1.0.16</Version>
+    <Authors>Els_kom org.</Authors>
+    <Owners>Els_kom org.</Owners>
+    <summary>A dotnet tool for installing/uninstalling and updating the Elskom workload.</summary>
+    <PackageDescription>
+      A dotnet tool for installing/uninstalling and updating the Elskom workload.
+    </PackageDescription>
+    <PackageReleaseNotes>
+       Fixed issue where the restructured Runtime packages and reference packs are not ever installed/updated.
+       Fixed issue where tool does not require .NET SDK version 8.0.100 or newer to be installed.
+       Fixed issue where a specific runtime version (specified by a --rid argument in the cli) cannot be requested.
+       Fixed issue where on x64 machines specifying --rid win-x86 would not install the workload into the "Program Files (x86)" install of the .NET SDK.
+       Fixed issue where installing on an ARM64 Machine might not set the ARM64 runtime to go inside of the normal "Program Files" install of the .NET SDK where the ARM64 version of it lies.
+       Added the printing of the path to where the .NET SDK install that the tool will install the workload into for the user to be able to update the workloads easier.
+       Overall restructure of the codebase as well to make things easier to maintain.
+    </PackageReleaseNotes>
+    <Copyright>Copyright © 2021~2024</Copyright>
+    <PackageProjectUrl>https://github.com/Elskom/installer</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Elskom/installer</RepositoryUrl>
+    <AssemblyFileVersion>$(Version)</AssemblyFileVersion>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <DebugType>embedded</DebugType>
+    <RootNamespace>Elskom.Check</RootNamespace>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+    <AnalysisLevel>preview</AnalysisLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Elskom.Check.Cli.Internal/Elskom.Check.Cli.Internal.csproj" />
+  </ItemGroup>
+
+</Project>
