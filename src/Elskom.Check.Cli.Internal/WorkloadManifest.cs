@@ -24,10 +24,25 @@ internal class WorkloadManifest
         var workloadFolder = DotNetSdkHelper.GetDotNetSdkWorkloadFolder(
             Constants.WorkloadName,
             sdkVersion,
-            runtimeIdentifier);
+            runtimeIdentifier,
+            out var oldWorkloadVersion);
         if (!Directory.Exists(workloadFolder))
         {
+            workloadFolder = Path.Join(workloadFolder, this.Version);
             _ = Directory.CreateDirectory(workloadFolder);
+        }
+        else if (Directory.Exists(workloadFolder) && !string.IsNullOrEmpty(oldWorkloadVersion) && !oldWorkloadVersion.Equals(this.Packs.ElskomSdk.Version))
+        {
+            if (this.Version.Equals(oldWorkloadVersion))
+            {
+                this.Version = this.Packs.ElskomSdk.Version;
+            }
+
+            Console.WriteLine($"Creating: '{workloadFolder.Replace(oldWorkloadVersion, this.Version)}'...");
+            _ = Directory.CreateDirectory(workloadFolder.Replace(oldWorkloadVersion, this.Version));
+            Console.WriteLine($"Deleting: '{workloadFolder}'...");
+            Directory.Delete(workloadFolder, true);
+            workloadFolder = workloadFolder.Replace(oldWorkloadVersion, this.Version);
         }
 
         var json = JsonSerializer.Serialize(
@@ -48,7 +63,8 @@ internal class WorkloadManifest
         var workloadFolder = DotNetSdkHelper.GetDotNetSdkWorkloadFolder(
             Constants.WorkloadName,
             sdkVersion,
-            runtimeIdentifier);
+            runtimeIdentifier,
+            out _);
         File.WriteAllText(
             $"{workloadFolder}{Path.DirectorySeparatorChar}WorkloadManifest.targets",
             $"""
@@ -59,13 +75,8 @@ internal class WorkloadManifest
                 <ElskomSdkFrameworkVersion>{this.Packs.ElskomSdkApp.Version}</ElskomSdkFrameworkVersion>
               </PropertyGroup>
 
-              <!--
-                  If we import the workload Sdk here for some reason
-                  it would get imported for all projects and not just specific ones.
-
-                  That behavior is never intended so all applications needing to use it
-                  will have to set their Project Sdk node to Elskom.Sdk.
-              -->
+              <Import Project="Sdk.props" Sdk="Elskom.Sdk" Condition="'$(UseElskomSdk)' == 'true'" />
+              <Import Project="Sdk.targets" Sdk="Elskom.Sdk" Condition="'$(UseElskomSdk)' == 'true'" />
 
             </Project>
 
@@ -164,9 +175,15 @@ internal class WorkloadManifest
                     Name = packName,
                 };
 
-            internal void UpdateVersion(string version)
+            internal bool UpdateVersion(string version)
             {
-                this.Version = version;
+                if (!this.Version.Equals(version, StringComparison.Ordinal))
+                {
+                    this.Version = version;
+                    return true;
+                }
+
+                return false;
             }
         }
     }

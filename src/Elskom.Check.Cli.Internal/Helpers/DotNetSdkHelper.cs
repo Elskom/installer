@@ -17,7 +17,7 @@ internal static class DotNetSdkHelper
         }
     }
 
-    internal static string GetDotNetSdkWorkloadFolder(string workloadName, string sdkVersion, string runtimeIdentifier)
+    internal static string GetDotNetSdkWorkloadFolder(string workloadName, string sdkVersion, string runtimeIdentifier, out string? workloadVersion)
     {
         var sdkLocation = GetDotNetSdkLocation(runtimeIdentifier);
         var sdkVersionBand = string.IsNullOrEmpty(sdkVersion) switch
@@ -25,7 +25,54 @@ internal static class DotNetSdkHelper
             true => GetDotNetSdkFeatureBandVersion(runtimeIdentifier),
             false => ConvertVersionToSdkBand(sdkVersion),
         };
-        return Path.Join(sdkLocation, "sdk-manifests", sdkVersionBand, workloadName);
+
+        var manifestPath = Path.Join(GetNewestSdkManifestsVersionFolder(Path.Join(sdkLocation, "sdk-manifests"), sdkVersionBand), workloadName);
+        workloadVersion = string.Empty;
+        if (Directory.Exists(manifestPath))
+        {
+            var di = new DirectoryInfo(manifestPath);
+            workloadVersion = di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).MaxByDevVersion()?.Name;
+            return !string.IsNullOrEmpty(workloadVersion)
+                ? Path.Join(manifestPath, workloadVersion)
+                : throw new DirectoryNotFoundException("Workload folder lacks a folder nested within with the version of the workload.");
+        }
+
+        return manifestPath;
+    }
+
+    internal static string? GetNewestSdkManifestsVersionFolder(string sdkManifests, string versionNumber)
+    {
+        var versionFolders = Directory.GetDirectories(sdkManifests)
+            .Where(name =>
+                !string.IsNullOrEmpty(name)
+                && (name.Equals(versionNumber, StringComparison.OrdinalIgnoreCase)
+                    || Regex.IsMatch(name, $@"{Regex.Escape(versionNumber)}-(preview|rc)\.\d+$", RegexOptions.IgnoreCase)))
+            .ToList();
+        if (versionFolders.Count == 0)
+        {
+            return null;
+        }
+
+        var exactMatch = versionFolders.FirstOrDefault(name => !string.IsNullOrEmpty(name) && name.Equals(versionNumber, StringComparison.OrdinalIgnoreCase));
+        if (exactMatch != null)
+        {
+            return exactMatch;
+        }
+
+        var rcMatch = versionFolders
+            .Where(name => !string.IsNullOrEmpty(name) && name.Contains(versionNumber) && name.Contains("-rc."))
+            .OrderByDescending(name => name)
+            .FirstOrDefault();
+        if (rcMatch != null)
+        {
+            return rcMatch;
+        }
+
+        var previewMatch = versionFolders
+            .Where(name => !string.IsNullOrEmpty(name) && name.Contains(versionNumber) && name.Contains("-preview."))
+            .OrderByDescending(name => name)
+            .FirstOrDefault();
+        return previewMatch;
     }
 
     internal static string GetDotNetSdkWorkloadPacksFolder(string runtimeIdentifier)
@@ -99,7 +146,7 @@ internal static class DotNetSdkHelper
         if (Directory.Exists(packPath))
         {
             var di = new DirectoryInfo(packPath);
-            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).First().Name;
+            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).MaxByDevVersion()?.Name ?? string.Empty;
         }
 
         return string.Empty;
@@ -112,8 +159,7 @@ internal static class DotNetSdkHelper
         if (Directory.Exists(packPath))
         {
             var di = new DirectoryInfo(packPath);
-            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).MaxBy(
-                item => ConvertVersionToNuGetVersion(item.Name))?.Name ?? string.Empty;
+            return di.EnumerateDirectories("*", SearchOption.TopDirectoryOnly).MaxByDevVersion()?.Name ?? string.Empty;
         }
 
         return string.Empty;

@@ -73,7 +73,8 @@ internal static class ListExtensions
         var workloadFolder = DotNetSdkHelper.GetDotNetSdkWorkloadFolder(
             Constants.WorkloadName,
             sdkVersion,
-            runtimeIdentifier);
+            runtimeIdentifier,
+            out _);
         var text = await File.ReadAllTextAsync(
             Path.Join(
                 workloadFolder,
@@ -129,7 +130,7 @@ internal static class ListExtensions
 
         if (templatePackUpdated)
         {
-            workloadManifest.Packs.ElskomSdkTemplates.UpdateVersion(currentTemplatePackVersion);
+            _ = workloadManifest.Packs.ElskomSdkTemplates.UpdateVersion(currentTemplatePackVersion);
             Console.WriteLine($"Workload Template Pack is now version: '{workloadManifest.Packs.ElskomSdkTemplates.Version}'.");
         }
 
@@ -165,19 +166,15 @@ internal static class ListExtensions
             foreach (var info in from info in workloadInfos
                                  where info.PackageName.Equals(Constants.RefPackName)
                                  where !info.InstalledPackageVersion.Equals(string.Empty)
-                                 where info.InstalledPackageVersion.EndsWith("-dev")
+                                 where (info.InstalledPackageVersion.EndsWith("-dev") && !info.PackageVersion.EndsWith("-dev"))
                                         || DotNetSdkHelper.ConvertVersionToNuGetVersion(info.InstalledPackageVersion)
                                         > DotNetSdkHelper.ConvertVersionToNuGetVersion(info.PackageVersion)
                                  select info)
             {
                 Console.WriteLine("Picked up newer installed reference pack, using that instead.");
                 info.PackageVersion = info.InstalledPackageVersion;
-                if (workloadManifest != null)
-                {
-                    GetWorkloadPack(info, workloadManifest, runtimeIdentifier!).UpdateVersion(info.PackageVersion);
-                }
-
-                return true;
+                return workloadManifest == null
+                    || GetWorkloadPack(info, workloadManifest, runtimeIdentifier!).UpdateVersion(info.PackageVersion);
             }
         }
 
@@ -191,19 +188,15 @@ internal static class ListExtensions
             foreach (var info in from info in workloadInfos
                                  where Constants.RuntimePacks.Contains(info.PackageName)
                                  where !info.InstalledPackageVersion.Equals(string.Empty)
-                                 where info.InstalledPackageVersion.EndsWith("-dev")
+                                 where (info.InstalledPackageVersion.EndsWith("-dev") && !info.PackageVersion.EndsWith("-dev"))
                                         || DotNetSdkHelper.ConvertVersionToNuGetVersion(info.InstalledPackageVersion)
                                         > DotNetSdkHelper.ConvertVersionToNuGetVersion(info.PackageVersion)
                                  select info)
             {
                 Console.WriteLine("Picked up newer installed runtime pack, using that instead.");
                 info.PackageVersion = info.InstalledPackageVersion;
-                if (workloadManifest != null)
-                {
-                    GetWorkloadPack(info, workloadManifest, runtimeIdentifier!).UpdateVersion(info.PackageVersion);
-                }
-
-                return true;
+                return workloadManifest == null
+                    || GetWorkloadPack(info, workloadManifest, runtimeIdentifier!).UpdateVersion(info.PackageVersion);
             }
         }
 
@@ -293,7 +286,7 @@ internal static class ListExtensions
     private static async Task<bool> UpdateCore(WorkloadInfo info, WorkloadManifest workloadManifest, string sdkVersion, string runtimeIdentifier)
     {
         var workloadPack = GetWorkloadPack(info, workloadManifest, runtimeIdentifier);
-        if (!workloadPack.Version.Equals(info.PackageVersion))
+        if (!workloadPack.Version.Equals(info.PackageVersion, StringComparison.Ordinal))
         {
             Console.WriteLine($"Update found for workload package '{info.PackageName.Replace($".Runtime.{runtimeIdentifier}", string.Empty, StringComparison.OrdinalIgnoreCase)}'.");
             _ = UninstallPackage(
@@ -302,7 +295,7 @@ internal static class ListExtensions
                 info.OutputPath,
                 sdkVersion,
                 runtimeIdentifier);
-            workloadPack.UpdateVersion(info.PackageVersion);
+            _ = workloadPack.UpdateVersion(info.PackageVersion);
             _ = await InstallCoreAsync(
                 info,
                 sdkVersion,
@@ -365,7 +358,8 @@ internal static class ListExtensions
         var workloadFolder = DotNetSdkHelper.GetDotNetSdkWorkloadFolder(
             Constants.WorkloadName,
             sdkVersion,
-            runtimeIdentifier);
+            runtimeIdentifier,
+            out _);
         if (Directory.Exists(workloadFolder))
         {
             Directory.Delete(workloadFolder, true);
